@@ -275,6 +275,12 @@ async function checkDueReturns() {
 // Auth Routes
 app.post('/api/signup', async (req, res) => {
   try {
+    console.log('Signup request received:', { 
+      body: req.body, 
+      dbConnected: !!db,
+      dbName: db?.databaseName 
+    });
+    
     const { name, email, password, role } = req.body;
 
     // Basic validation
@@ -287,48 +293,68 @@ app.post('/api/signup', async (req, res) => {
     }
 
     // Check if user exists
+    console.log('Checking if user exists:', email);
     const existingUser = await db.collection('users').findOne({ email });
+    console.log('Existing user check result:', !!existingUser);
+    
     if (existingUser) {
       return res.status(400).json({ error: 'User already exists' });
     }
 
     // Hash password
+    console.log('Hashing password...');
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
+    console.log('Creating user...');
     const result = await db.collection('users').insertOne({
       name,
       email,
       password: hashedPassword,
       role,
     });
+    console.log('User creation result:', result);
 
     res.status(201).json({
       message: 'User created successfully',
       userId: result.insertedId,
     });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('Signup error:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
 app.post('/api/login', async (req, res) => {
   try {
+    console.log('Login request received:', { 
+      body: req.body, 
+      dbConnected: !!db,
+      dbName: db?.databaseName 
+    });
+    
     const { email, password } = req.body;
 
     // Find user
+    console.log('Looking for user with email:', email);
     const user = await db.collection('users').findOne({ email });
+    console.log('User found:', !!user);
+    
     if (!user) {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
 
     // Check password
+    console.log('Checking password...');
     const isValidPassword = await bcrypt.compare(password, user.password);
+    console.log('Password valid:', isValidPassword);
+    
     if (!isValidPassword) {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
 
     // Create JWT token
+    console.log('Creating JWT token...');
     const token = jwt.sign(
       {
         userId: user._id,
@@ -340,6 +366,7 @@ app.post('/api/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    console.log('Login successful for user:', user.email);
     res.json({
       token,
       user: {
@@ -351,7 +378,7 @@ app.post('/api/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Error during login:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
