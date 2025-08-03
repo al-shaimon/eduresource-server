@@ -22,12 +22,35 @@ const getAllowedOrigins = () => {
   if (corsOrigins) {
     return corsOrigins.split(',').map((origin) => origin.trim());
   }
+
+  // Fallback origins for development and production
+  const defaultOrigins = [
+    'https://eduresource.alshaimon.com',
+    'https://www.eduresource.alshaimon.com',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ];
+
+  return defaultOrigins;
 };
 
 // Middleware
 app.use(
   cors({
-    origin: getAllowedOrigins(),
+    origin: function (origin, callback) {
+      const allowedOrigins = getAllowedOrigins();
+      console.log('CORS check - Origin:', origin, 'Allowed:', allowedOrigins);
+
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        console.log('CORS Error - Origin not allowed:', origin);
+        return callback(new Error('Not allowed by CORS'), false);
+      }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
