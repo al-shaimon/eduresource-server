@@ -1292,32 +1292,41 @@ app.get('/', (req, res) => {
 
 // Start server
 connectDB().then(() => {
-  app.listen(PORT, async () => {
-    console.log(`Server running on port ${PORT}`);
+  // Only start server with app.listen in development
+  if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, async () => {
+      console.log(`Server running on port ${PORT}`);
 
-    // Run overdue check immediately on startup
-    console.log('Running initial overdue check...');
-    try {
-      const initialOverdueCount = await checkOverdueReturns();
-      const initialDueCount = await checkDueReturns();
-      console.log(
-        `Initial check completed: ${initialOverdueCount} overdue, ${initialDueCount} due soon`
-      );
-    } catch (error) {
-      console.error('Error in initial overdue check:', error);
-    }
-
-    // Set up periodic overdue checking (every 2 hours)
-    const OVERDUE_CHECK_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
-    setInterval(async () => {
-      console.log('Running scheduled overdue check...');
+      // Run overdue check immediately on startup
+      console.log('Running initial overdue check...');
       try {
-        const overdueCount = await checkOverdueReturns();
-        const dueCount = await checkDueReturns();
-        console.log(`Scheduled check completed: ${overdueCount} overdue, ${dueCount} due soon`);
+        const initialOverdueCount = await checkOverdueReturns();
+        const initialDueCount = await checkDueReturns();
+        console.log(
+          `Initial check completed: ${initialOverdueCount} overdue, ${initialDueCount} due soon`
+        );
       } catch (error) {
-        console.error('Error in scheduled overdue check:', error);
+        console.error('Error in initial overdue check:', error);
       }
-    }, OVERDUE_CHECK_INTERVAL);
-  });
+
+      // Set up periodic overdue checking (every 2 hours)
+      const OVERDUE_CHECK_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+      setInterval(async () => {
+        console.log('Running scheduled overdue check...');
+        try {
+          const overdueCount = await checkOverdueReturns();
+          const dueCount = await checkDueReturns();
+          console.log(`Scheduled check completed: ${overdueCount} overdue, ${dueCount} due soon`);
+        } catch (error) {
+          console.error('Error in scheduled overdue check:', error);
+        }
+      }, OVERDUE_CHECK_INTERVAL);
+    });
+  } else {
+    // In production (Vercel), just run the initial setup
+    console.log('Production mode: Database connected, ready for serverless functions');
+  }
 });
+
+// Export for Vercel serverless functions
+module.exports = app;

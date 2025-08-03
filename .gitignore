@@ -9,3 +9,4 @@ yarn-error.log*
 .env.production.local
 *.log
 seed.js
+.vercel
