@@ -58,6 +58,23 @@ app.use(
 );
 app.use(express.json());
 
+// Apply database connection middleware to all API routes
+app.use('/api/*', async (req, res, next) => {
+  if (!db) {
+    try {
+      console.log('Initializing database connection...');
+      const client = new MongoClient(MONGO_URI);
+      await client.connect();
+      db = client.db(DB_NAME);
+      console.log('Database connected successfully');
+    } catch (error) {
+      console.error('Database connection error:', error);
+      return res.status(500).json({ error: 'Database connection failed', details: error.message });
+    }
+  }
+  next();
+});
+
 // Connect to MongoDB
 async function connectDB() {
   try {
