@@ -275,12 +275,12 @@ async function checkDueReturns() {
 // Auth Routes
 app.post('/api/signup', async (req, res) => {
   try {
-    console.log('Signup request received:', { 
-      body: req.body, 
+    console.log('Signup request received:', {
+      body: req.body,
       dbConnected: !!db,
-      dbName: db?.databaseName 
+      dbName: db?.databaseName,
     });
-    
+
     const { name, email, password, role } = req.body;
 
     // Basic validation
@@ -296,7 +296,7 @@ app.post('/api/signup', async (req, res) => {
     console.log('Checking if user exists:', email);
     const existingUser = await db.collection('users').findOne({ email });
     console.log('Existing user check result:', !!existingUser);
-    
+
     if (existingUser) {
       return res.status(400).json({ error: 'User already exists' });
     }
@@ -327,19 +327,19 @@ app.post('/api/signup', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
   try {
-    console.log('Login request received:', { 
-      body: req.body, 
+    console.log('Login request received:', {
+      body: req.body,
       dbConnected: !!db,
-      dbName: db?.databaseName 
+      dbName: db?.databaseName,
     });
-    
+
     const { email, password } = req.body;
 
     // Find user
     console.log('Looking for user with email:', email);
     const user = await db.collection('users').findOne({ email });
     console.log('User found:', !!user);
-    
+
     if (!user) {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
@@ -348,7 +348,7 @@ app.post('/api/login', async (req, res) => {
     console.log('Checking password...');
     const isValidPassword = await bcrypt.compare(password, user.password);
     console.log('Password valid:', isValidPassword);
-    
+
     if (!isValidPassword) {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
