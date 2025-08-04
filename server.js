@@ -329,6 +329,7 @@ app.post('/api/signup', async (req, res) => {
       email,
       password: hashedPassword,
       role,
+      createdAt: new Date(),
     });
     console.log('User creation result:', result);
 
